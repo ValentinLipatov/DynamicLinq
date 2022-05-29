@@ -14,16 +14,21 @@ namespace DynamicLinq
 
         private static ParsingConfig _parsingConfig;
 
-        public static TOut Invoke<TIn, TOut>(string expression, string parameterName, TIn parameter)
+        public static T Invoke<T>(string expression, string parameterName, Type parameterType, object parameter)
         {
-            return (TOut)Invoke(typeof(TIn), typeof(TOut), expression, parameterName, parameter);
+            return (T)Invoke(expression, parameterName, parameterType, parameter, typeof(T));
         }
 
-        public static object Invoke(Type typeIn, Type typeOut, string expression, string parameterName, object parameter)
+        public static TResult Invoke<TParameter, TResult>(string expression, string parameterName, TParameter parameter)
         {
-            var expressionParameter = Expression.Parameter(typeIn, parameterName);
+            return (TResult)Invoke(expression, parameterName, typeof(TParameter), parameter, typeof(TResult));
+        }
+
+        public static object Invoke(string expression, string parameterName, Type parameterType, object parameter, Type resultType)
+        {
+            var expressionParameter = Expression.Parameter(parameterType, parameterName);
             var expressionParser = new ExpressionParser(new[] { expressionParameter }, expression, new object[] { }, _parsingConfig);
-            var body = expressionParser.Parse(typeOut);
+            var body = expressionParser.Parse(resultType);
             return Expression.Lambda(body, expressionParameter).Compile().DynamicInvoke(parameter);
         }
     }
